@@ -1,0 +1,99 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  tel       String?
+  role      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  guideProfile Guide?
+
+  bookingsAsTourist Booking[] @relation("TouristBooking")
+  bookingsAsGuide   Booking[] @relation("GuideBooking")
+  trips             Trip[]    @relation("GuideTrips")
+}
+
+model Guide {
+  id          Int    @id @default(autoincrement())
+  userId      Int    @unique  
+  experience  String?
+  images      String?
+  language    String?
+  status      String  @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+
+model Province {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  trips    Trip[]
+  bookings Booking[]
+}
+
+model Trip {
+  id         Int      @id @default(autoincrement())
+  name       String
+  price      Float?
+  provinceId Int
+  guideId    Int
+  isActive   Boolean  @default(true)
+
+  province Province @relation(fields: [provinceId], references: [id])
+  guide    User     @relation("GuideTrips", fields: [guideId], references: [id])
+  bookings Booking[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([provinceId])
+  @@index([guideId])
+}
+
+
+model Booking {
+  id         Int      @id @default(autoincrement())
+  datetime   DateTime
+  status     String   @default("pending")
+
+  touristId  Int
+  guideId    Int
+  provinceId Int
+  tripId     Int
+
+  tourist  User     @relation("TouristBooking", fields: [touristId], references: [id])
+  guide    User     @relation("GuideBooking", fields: [guideId], references: [id])
+  province Province @relation(fields: [provinceId], references: [id])
+  trip     Trip     @relation(fields: [tripId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([touristId])
+  @@index([guideId])
+  @@index([tripId])
+  @@index([provinceId])
+}

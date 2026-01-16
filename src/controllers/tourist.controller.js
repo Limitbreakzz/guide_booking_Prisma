@@ -1,0 +1,148 @@
+const prisma = require("../prisma.js");
+
+exports.getTourists = async (req, res) => {
+  try {
+    const tourists = await prisma.user.findMany({
+      where: { role: "tourist" },
+    });
+
+    res.json({
+      status: "success",
+      message: "Tourists retrieved successfully",
+      data: tourists,
+    });
+  } catch (error) {
+    console.error("Error fetching tourists:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Internal server error",
+    });
+  }
+};
+
+exports.getTouristById = async (req, res) => {
+  try {
+    const tourist = await prisma.user.findFirst({
+      where: {
+        id: Number(req.params.id),
+        role: "tourist",
+      },
+    });
+
+    if (!tourist) {
+      return res.status(404).json({
+        status: "error",
+        message: "Tourist not found",
+      });
+    }
+
+    res.json({
+      status: "success",
+      message: "Tourist retrieved successfully",
+      data: tourist,
+    });
+  } catch (error) {
+    console.error("Error fetching tourist:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Internal server error",
+    });
+  }
+};
+
+exports.createTourist = async (req, res) => {
+  try {
+    const { name, email, password, tel } = req.body;
+
+    const existing = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existing) {
+      return res.status(400).json({
+        status: "error",
+        message: "Email already exists",
+      });
+    }
+
+    const tourist = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password,
+        tel,
+        role: "tourist",
+      },
+    });
+
+    res.status(201).json({
+      status: "success",
+      message: "Tourist created successfully",
+      data: tourist,
+    });
+  } catch (error) {
+    console.error("Error creating tourist:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Internal server error",
+    });
+  }
+};
+
+exports.updateTourist = async (req, res) => {
+  try {
+    const { role, email, ...data } = req.body; 
+
+    const updated = await prisma.user.update({
+      where: { id: Number(req.params.id) },
+      data,
+    });
+
+    res.json({
+      status: "success",
+      message: "Tourist updated successfully",
+      data: updated,
+    });
+  } catch (error) {
+    console.error("Error updating tourist:", error);
+
+    if (error.code === "P2025") {
+      return res.status(404).json({
+        status: "error",
+        message: "Tourist not found",
+      });
+    }
+
+    res.status(500).json({
+      status: "error",
+      message: "Internal server error",
+    });
+  }
+};
+
+exports.deleteTourist = async (req, res) => {
+  try {
+    await prisma.user.delete({
+      where: { id: Number(req.params.id) },
+    });
+
+    res.json({
+      status: "success",
+      message: "Tourist deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting tourist:", error);
+
+    if (error.code === "P2025") {
+      return res.status(404).json({
+        status: "error",
+        message: "Tourist not found",
+      });
+    }
+
+    res.status(500).json({
+      status: "error",
+      message: "Internal server error",
+    });
+  }
+};
