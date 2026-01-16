@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE `User` ADD COLUMN `image` VARCHAR(191) NULL,
-    ADD COLUMN `province` VARCHAR(191) NULL;

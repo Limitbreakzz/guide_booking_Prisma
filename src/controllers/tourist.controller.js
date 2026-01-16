@@ -2,7 +2,7 @@ const prisma = require("../prisma.js");
 
 exports.getTourists = async (req, res) => {
   try {
-    const tourists = await prisma.user.findMany({
+    const tourists = await prisma.tourist.findMany({
       where: { role: "tourist" },
     });
 
@@ -22,7 +22,7 @@ exports.getTourists = async (req, res) => {
 
 exports.getTouristById = async (req, res) => {
   try {
-    const tourist = await prisma.user.findFirst({
+    const tourist = await prisma.tourist.findFirst({
       where: {
         id: Number(req.params.id),
         role: "tourist",
@@ -54,7 +54,7 @@ exports.createTourist = async (req, res) => {
   try {
     const { name, email, password, tel } = req.body;
 
-    const existing = await prisma.user.findUnique({
+    const existing = await prisma.tourist.findUnique({
       where: { email },
     });
 
@@ -65,7 +65,7 @@ exports.createTourist = async (req, res) => {
       });
     }
 
-    const tourist = await prisma.user.create({
+    const tourist = await prisma.tourist.create({
       data: {
         name,
         email,
@@ -91,9 +91,16 @@ exports.createTourist = async (req, res) => {
 
 exports.updateTourist = async (req, res) => {
   try {
-    const { role, email, ...data } = req.body; 
+    const id = Number(req.params.id);
+    const { role, ...data } = req.body; 
 
-    const updated = await prisma.user.update({
+    if (isNaN(id)) {
+    return res.status(400).json({
+      status: "error",
+      message: "Invalid Tourist id",
+      });
+    }
+    const updated = await prisma.tourist.update({
       where: { id: Number(req.params.id) },
       data,
     });
@@ -122,7 +129,7 @@ exports.updateTourist = async (req, res) => {
 
 exports.deleteTourist = async (req, res) => {
   try {
-    await prisma.user.delete({
+    await prisma.tourist.delete({
       where: { id: Number(req.params.id) },
     });
 

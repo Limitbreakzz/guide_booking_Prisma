@@ -1,5 +1,0 @@
--- AlterTable
-ALTER TABLE `User` ADD COLUMN `experience` VARCHAR(191) NULL,
-    ADD COLUMN `images` VARCHAR(191) NULL,
-    ADD COLUMN `status` VARCHAR(191) NOT NULL DEFAULT 'active',
-    ADD COLUMN `tel` VARCHAR(191) NULL;

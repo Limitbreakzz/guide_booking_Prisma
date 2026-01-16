@@ -73,7 +73,7 @@ exports.createTrip = async (req, res) => {
       });
     }
 
-    const guide = await prisma.user.findFirst({
+    const guide = await prisma.guide.findFirst({
       where: { id: Number(guideId), role: "guide" }
     });
 

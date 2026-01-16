@@ -13,8 +13,8 @@ exports.getBookings = async (req, res) => {
       include: {
         trip: true,
         province: true,
-        tourist: { select: { id: true, name: true } },
-        guide: { select: { id: true, name: true } },
+        tourist: { select: { id: true, name: true , tel: true } },
+        guide: { select: { id: true, name: true , experience: true, language: true, tel: true} },
       },
       orderBy: { createdAt: "desc" }
     });
@@ -98,11 +98,7 @@ exports.createBooking = async (req, res) => {
       },
       include: { 
         tourist: true, 
-        guide: {
-          include: {
-            guideProfile: true,
-          }
-        } 
+        guide : true,
       },
     });
 
