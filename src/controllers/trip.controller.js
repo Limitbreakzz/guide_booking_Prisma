@@ -4,7 +4,7 @@ exports.getTrips = async (req, res) => {
   try {
     const { provinceId } = req.query;
 
-    const trips = await prisma.trip.findMany({where: provinceId ? { provinceId: Number(provinceId) } : {},
+    const trips = await prisma.trip.findMany({where: provinceId ? { provinceId: Number(provinceId) } : undefined,
       include: {
         province: true,
         guide: { select: { id: true, name: true } }

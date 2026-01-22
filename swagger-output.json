@@ -24,7 +24,7 @@
     "/guides/": {
       "get": {
         "tags": [
-          "Guide"
+          "Guides"
         ],
         "description": "ดึงข้อมูลไกด์ทั้งหมด",
         "responses": {
@@ -38,7 +38,7 @@
       },
       "post": {
         "tags": [
-          "Guide"
+          "Guides"
         ],
         "description": "เพิ่มข้อมูลไกด์ใหม่",
         "parameters": [
@@ -68,6 +68,9 @@
                 },
                 "images": {
                   "example": "any"
+                },
+                "status": {
+                  "example": "any"
                 }
               }
             }
@@ -89,7 +92,7 @@
     "/guides/{id}": {
       "get": {
         "tags": [
-          "Guide"
+          "Guides"
         ],
         "description": "ดึงข้อมูลไกด์ตาม ID",
         "parameters": [
@@ -114,7 +117,7 @@
       },
       "put": {
         "tags": [
-          "Guide"
+          "Guides"
         ],
         "description": "แก้ไขข้อมูลไกด์",
         "parameters": [
@@ -131,9 +134,6 @@
               "type": "object",
               "properties": {
                 "role": {
-                  "example": "any"
-                },
-                "data": {
                   "example": "any"
                 }
               }
@@ -157,7 +157,7 @@
       },
       "delete": {
         "tags": [
-          "Guide"
+          "Guides"
         ],
         "description": "ลบข้อมูลไกด์",
         "parameters": [
@@ -184,7 +184,7 @@
     "/tourists/": {
       "get": {
         "tags": [
-          "Tourist"
+          "Tourists"
         ],
         "description": "ดึงข้อมูลนักท่องเที่ยวทั้งหมด",
         "responses": {
@@ -198,7 +198,7 @@
       },
       "post": {
         "tags": [
-          "Tourist"
+          "Tourists"
         ],
         "description": "เพิ่มข้อมูลนักท่องเที่ยวใหม่",
         "parameters": [
@@ -218,6 +218,9 @@
                   "example": "any"
                 },
                 "tel": {
+                  "example": "any"
+                },
+                "images": {
                   "example": "any"
                 }
               }
@@ -240,7 +243,7 @@
     "/tourists/{id}": {
       "get": {
         "tags": [
-          "Tourist"
+          "Tourists"
         ],
         "description": "ดึงข้อมูลนักท่องเที่ยวตาม ID",
         "parameters": [
@@ -265,7 +268,7 @@
       },
       "put": {
         "tags": [
-          "Tourist"
+          "Tourists"
         ],
         "description": "แก้ไขข้อมูลนักท่องเที่ยว",
         "parameters": [
@@ -282,9 +285,6 @@
               "type": "object",
               "properties": {
                 "role": {
-                  "example": "any"
-                },
-                "data": {
                   "example": "any"
                 }
               }
@@ -308,7 +308,7 @@
       },
       "delete": {
         "tags": [
-          "Tourist"
+          "Tourists"
         ],
         "description": "ลบข้อมูลนักท่องเที่ยว",
         "parameters": [
@@ -335,7 +335,7 @@
     "/provinces/": {
       "get": {
         "tags": [
-          "Province"
+          "Provinces"
         ],
         "description": "ดึงข้อมูลจังหวัดทั้งหมด",
         "responses": {
@@ -349,7 +349,7 @@
       },
       "post": {
         "tags": [
-          "Province"
+          "Provinces"
         ],
         "description": "เพิ่มข้อมูลจังหวัดใหม่",
         "parameters": [
@@ -382,7 +382,7 @@
     "/provinces/{id}": {
       "get": {
         "tags": [
-          "Province"
+          "Provinces"
         ],
         "description": "ดึงข้อมูลจังหวัดตาม ID",
         "parameters": [
@@ -407,7 +407,7 @@
       },
       "put": {
         "tags": [
-          "Province"
+          "Provinces"
         ],
         "description": "แก้ไขข้อมูลจังหวัด",
         "parameters": [
@@ -444,7 +444,7 @@
       },
       "delete": {
         "tags": [
-          "Province"
+          "Provinces"
         ],
         "description": "ลบข้อมูลจังหวัด",
         "parameters": [
@@ -471,7 +471,7 @@
     "/trips/": {
       "get": {
         "tags": [
-          "Trip"
+          "Trips"
         ],
         "description": "ดึงข้อมูลทริปทั้งหมด",
         "parameters": [
@@ -492,7 +492,7 @@
       },
       "post": {
         "tags": [
-          "Trip"
+          "Trips"
         ],
         "description": "เพิ่มข้อมูลทริปใหม่",
         "parameters": [
@@ -534,7 +534,7 @@
     "/trips/{id}": {
       "get": {
         "tags": [
-          "Trip"
+          "Trips"
         ],
         "description": "ดึงข้อมูลทริปตาม ID",
         "parameters": [
@@ -559,7 +559,7 @@
       },
       "put": {
         "tags": [
-          "Trip"
+          "Trips"
         ],
         "description": "แก้ไขข้อมูลทริป",
         "parameters": [
@@ -605,7 +605,7 @@
       },
       "delete": {
         "tags": [
-          "Trip"
+          "Trips"
         ],
         "description": "ลบข้อมูลทริป",
         "parameters": [
@@ -632,7 +632,7 @@
     "/bookings/": {
       "get": {
         "tags": [
-          "Booking"
+          "Bookings"
         ],
         "description": "ดึงรายการจองทั้งหมด",
         "parameters": [
@@ -658,7 +658,7 @@
       },
       "post": {
         "tags": [
-          "Booking"
+          "Bookings"
         ],
         "description": "สร้างรายการจองใหม่",
         "parameters": [
@@ -700,7 +700,7 @@
     "/bookings/{id}": {
       "get": {
         "tags": [
-          "Booking"
+          "Bookings"
         ],
         "description": "ดึงข้อมูลการจองตาม ID",
         "parameters": [
@@ -725,7 +725,7 @@
       },
       "put": {
         "tags": [
-          "Booking"
+          "Bookings"
         ],
         "description": "แก้ไขข้อมูลการจอง",
         "parameters": [
@@ -765,7 +765,7 @@
       },
       "delete": {
         "tags": [
-          "Booking"
+          "Bookings"
         ],
         "description": "ลบข้อมูลการจอง",
         "parameters": [

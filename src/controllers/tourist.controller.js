@@ -52,7 +52,7 @@ exports.getTouristById = async (req, res) => {
 
 exports.createTourist = async (req, res) => {
   try {
-    const { name, email, password, tel } = req.body;
+    const { name, email, password, tel, images } = req.body;
 
     const existing = await prisma.tourist.findUnique({
       where: { email },
@@ -71,6 +71,7 @@ exports.createTourist = async (req, res) => {
         email,
         password,
         tel,
+        images,
         role: "tourist",
       },
     });
@@ -92,17 +93,24 @@ exports.createTourist = async (req, res) => {
 exports.updateTourist = async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const { role, ...data } = req.body; 
 
     if (isNaN(id)) {
-    return res.status(400).json({
-      status: "error",
-      message: "Invalid Tourist id",
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid tourist id",
       });
     }
+
+    if (req.body.role !== undefined) {
+      return res.status(400).json({
+        status: "error",
+        message: "Role cannot be updated",
+      });
+    }
+
     const updated = await prisma.tourist.update({
-      where: { id: Number(req.params.id) },
-      data,
+      where: { id },
+      data: req.body,
     });
 
     res.json({
@@ -110,6 +118,7 @@ exports.updateTourist = async (req, res) => {
       message: "Tourist updated successfully",
       data: updated,
     });
+
   } catch (error) {
     console.error("Error updating tourist:", error);
 
@@ -126,6 +135,7 @@ exports.updateTourist = async (req, res) => {
     });
   }
 };
+
 
 exports.deleteTourist = async (req, res) => {
   try {

@@ -50,7 +50,7 @@ exports.getGuideById = async (req, res) => {
 
 exports.createGuide = async (req, res) => {
   try {
-    const { name, email, password, tel, experience, language, images } = req.body;
+    const { name, email, password, tel, experience, language, images, status } = req.body;
 
     const exists = await prisma.guide.findUnique({ where: { email } });
 
@@ -67,6 +67,7 @@ exports.createGuide = async (req, res) => {
         password,
         tel,
         role: "GUIDE",
+        status: status ?? "active",
         experience,
         language,
         images,
@@ -90,25 +91,32 @@ exports.createGuide = async (req, res) => {
 exports.updateGuide = async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const { role, ...data } = req.body; 
 
     if (isNaN(id)) {
-    return res.status(400).json({
-      status: "error",
-      message: "Invalid guide id",
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid guide id",
+      });
+    }
+
+    if (req.body.role !== undefined) {
+      return res.status(400).json({
+        status: "error",
+        message: "Role cannot be updated",
       });
     }
 
     const updated = await prisma.guide.update({
-      where: { id: Number(req.params.id) },
-      data,
+      where: { id },
+      data: req.body,
     });
 
     res.json({
       status: "success",
-      message: "Tourist updated successfully",
+      message: "Guide updated successfully",
       data: updated,
     });
+
   } catch (error) {
     console.error("Error updating guide:", error);
 
@@ -125,6 +133,7 @@ exports.updateGuide = async (req, res) => {
     });
   }
 };
+
 
 exports.deleteGuide = async (req, res) => {
   try {
