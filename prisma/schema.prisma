@@ -32,7 +32,7 @@ model Guide {
   images      String?
   language    String?
   role        String   @default("GUIDE")
-  status      String  @default("active")
+  status      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

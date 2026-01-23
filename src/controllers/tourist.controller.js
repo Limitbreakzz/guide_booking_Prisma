@@ -136,7 +136,6 @@ exports.updateTourist = async (req, res) => {
   }
 };
 
-
 exports.deleteTourist = async (req, res) => {
   try {
     await prisma.tourist.delete({

@@ -68,9 +68,6 @@
                 },
                 "images": {
                   "example": "any"
-                },
-                "status": {
-                  "example": "any"
                 }
               }
             }
@@ -134,6 +131,30 @@
               "type": "object",
               "properties": {
                 "role": {
+                  "example": "any"
+                },
+                "name": {
+                  "example": "any"
+                },
+                "email": {
+                  "example": "any"
+                },
+                "password": {
+                  "example": "any"
+                },
+                "tel": {
+                  "example": "any"
+                },
+                "experience": {
+                  "example": "any"
+                },
+                "language": {
+                  "example": "any"
+                },
+                "images": {
+                  "example": "any"
+                },
+                "status": {
                   "example": "any"
                 }
               }

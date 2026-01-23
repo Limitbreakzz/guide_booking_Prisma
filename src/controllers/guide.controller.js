@@ -50,7 +50,7 @@ exports.getGuideById = async (req, res) => {
 
 exports.createGuide = async (req, res) => {
   try {
-    const { name, email, password, tel, experience, language, images, status } = req.body;
+    const { name, email, password, tel, experience, language, images } = req.body;
 
     const exists = await prisma.guide.findUnique({ where: { email } });
 
@@ -67,7 +67,7 @@ exports.createGuide = async (req, res) => {
         password,
         tel,
         role: "GUIDE",
-        status: status ?? "active",
+        status: true,
         experience,
         language,
         images,
@@ -105,10 +105,20 @@ exports.updateGuide = async (req, res) => {
         message: "Role cannot be updated",
       });
     }
+    const { name, email, password, tel, experience, language, images, status } = req.body;
 
     const updated = await prisma.guide.update({
       where: { id },
-      data: req.body,
+      data: {
+        name,
+        email,
+        password,
+        tel,
+        experience,
+        language,
+        images,
+        status: typeof status === "boolean" ? status : undefined,
+      },
     });
 
     res.json({
@@ -133,7 +143,6 @@ exports.updateGuide = async (req, res) => {
     });
   }
 };
-
 
 exports.deleteGuide = async (req, res) => {
   try {
