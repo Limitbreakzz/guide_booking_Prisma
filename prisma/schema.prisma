@@ -21,7 +21,6 @@ model Tourist {
   bookings Booking[] @relation("TouristBooking")
 }
 
-
 model Guide {
   id          Int    @id @default(autoincrement())
   name        String
@@ -39,8 +38,6 @@ model Guide {
   trips    Trip[]    @relation("GuideTrips")
   bookings Booking[] @relation("GuideBooking")
 }
-
-
 
 model Province {
   id   Int    @id @default(autoincrement())
@@ -68,7 +65,6 @@ model Trip {
   @@index([provinceId])
   @@index([guideId])
 }
-
 
 model Booking {
   id         Int      @id @default(autoincrement())
