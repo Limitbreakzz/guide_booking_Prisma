@@ -21,6 +21,87 @@
         }
       }
     },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "description": "ล็อคอิน",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "email": {
+                  "example": "any"
+                },
+                "password": {
+                  "example": "any"
+                },
+                "role": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "description": "สมัครสมาชิก",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "example": "any"
+                },
+                "email": {
+                  "example": "any"
+                },
+                "password": {
+                  "example": "any"
+                },
+                "role": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/guides/": {
       "get": {
         "tags": [
@@ -41,32 +122,58 @@
           "Guides"
         ],
         "description": "เพิ่มข้อมูลไกด์ใหม่",
+        "consumes": [
+          "multipart/form-data"
+        ],
         "parameters": [
+          {
+            "name": "name",
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "email",
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "password",
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "tel",
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "experience",
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "language",
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "picture",
+            "in": "formData",
+            "type": "file"
+          },
           {
             "name": "body",
             "in": "body",
             "schema": {
               "type": "object",
               "properties": {
-                "name": {
+                "status": {
                   "example": "any"
                 },
-                "email": {
+                "message": {
                   "example": "any"
                 },
-                "password": {
-                  "example": "any"
-                },
-                "tel": {
-                  "example": "any"
-                },
-                "experience": {
-                  "example": "any"
-                },
-                "language": {
-                  "example": "any"
-                },
-                "images": {
+                "error": {
                   "example": "any"
                 }
               }
@@ -79,6 +186,30 @@
           },
           "400": {
             "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/guides/q/{keyword}": {
+      "get": {
+        "tags": [
+          "Guides"
+        ],
+        "description": "ค้นหาไกด์",
+        "parameters": [
+          {
+            "name": "keyword",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
           },
           "500": {
             "description": "Internal Server Error"
@@ -104,6 +235,9 @@
           "200": {
             "description": "OK"
           },
+          "400": {
+            "description": "Bad Request"
+          },
           "404": {
             "description": "Not Found"
           },
@@ -117,12 +251,55 @@
           "Guides"
         ],
         "description": "แก้ไขข้อมูลไกด์",
+        "consumes": [
+          "multipart/form-data"
+        ],
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "email",
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "password",
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "tel",
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "experience",
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "language",
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "picture",
+            "in": "formData",
+            "type": "file"
           },
           {
             "name": "body",
@@ -133,28 +310,13 @@
                 "role": {
                   "example": "any"
                 },
-                "name": {
-                  "example": "any"
-                },
-                "email": {
-                  "example": "any"
-                },
-                "password": {
-                  "example": "any"
-                },
-                "tel": {
-                  "example": "any"
-                },
-                "experience": {
-                  "example": "any"
-                },
-                "language": {
-                  "example": "any"
-                },
-                "images": {
-                  "example": "any"
-                },
                 "status": {
+                  "example": "any"
+                },
+                "message": {
+                  "example": "any"
+                },
+                "error": {
                   "example": "any"
                 }
               }
@@ -167,6 +329,9 @@
           },
           "400": {
             "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
           },
           "404": {
             "description": "Not Found"
@@ -187,11 +352,22 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
           }
         ],
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
           },
           "404": {
             "description": "Not Found"
@@ -222,26 +398,48 @@
           "Tourists"
         ],
         "description": "เพิ่มข้อมูลนักท่องเที่ยวใหม่",
+        "consumes": [
+          "multipart/form-data"
+        ],
         "parameters": [
+          {
+            "name": "name",
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "email",
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "password",
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "tel",
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "picture",
+            "in": "formData",
+            "type": "file"
+          },
           {
             "name": "body",
             "in": "body",
             "schema": {
               "type": "object",
               "properties": {
-                "name": {
+                "status": {
                   "example": "any"
                 },
-                "email": {
+                "message": {
                   "example": "any"
                 },
-                "password": {
-                  "example": "any"
-                },
-                "tel": {
-                  "example": "any"
-                },
-                "images": {
+                "error": {
                   "example": "any"
                 }
               }
@@ -279,6 +477,9 @@
           "200": {
             "description": "OK"
           },
+          "400": {
+            "description": "Bad Request"
+          },
           "404": {
             "description": "Not Found"
           },
@@ -292,6 +493,9 @@
           "Tourists"
         ],
         "description": "แก้ไขข้อมูลนักท่องเที่ยว",
+        "consumes": [
+          "multipart/form-data"
+        ],
         "parameters": [
           {
             "name": "id",
@@ -300,12 +504,51 @@
             "type": "string"
           },
           {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "email",
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "password",
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "tel",
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "picture",
+            "in": "formData",
+            "type": "file"
+          },
+          {
             "name": "body",
             "in": "body",
             "schema": {
               "type": "object",
               "properties": {
                 "role": {
+                  "example": "any"
+                },
+                "status": {
+                  "example": "any"
+                },
+                "message": {
+                  "example": "any"
+                },
+                "error": {
                   "example": "any"
                 }
               }
@@ -318,6 +561,9 @@
           },
           "400": {
             "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
           },
           "404": {
             "description": "Not Found"
@@ -338,11 +584,22 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
           }
         ],
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
           },
           "404": {
             "description": "Not Found"
@@ -375,6 +632,11 @@
         "description": "เพิ่มข้อมูลจังหวัดใหม่",
         "parameters": [
           {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "body",
             "in": "body",
             "schema": {
@@ -393,6 +655,9 @@
           },
           "400": {
             "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
           },
           "500": {
             "description": "Internal Server Error"
@@ -418,6 +683,9 @@
           "200": {
             "description": "OK"
           },
+          "400": {
+            "description": "Bad Request"
+          },
           "404": {
             "description": "Not Found"
           },
@@ -439,6 +707,11 @@
             "type": "string"
           },
           {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
             "name": "body",
             "in": "body",
             "schema": {
@@ -454,6 +727,12 @@
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
           },
           "404": {
             "description": "Not Found"
@@ -474,11 +753,22 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
           }
         ],
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
           },
           "404": {
             "description": "Not Found"
@@ -516,23 +806,61 @@
           "Trips"
         ],
         "description": "เพิ่มข้อมูลทริปใหม่",
+        "consumes": [
+          "multipart/form-data"
+        ],
         "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "formData",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "provinceId",
+            "in": "formData",
+            "type": "integer",
+            "required": true
+          },
+          {
+            "name": "guideId",
+            "in": "formData",
+            "type": "integer",
+            "required": true
+          },
+          {
+            "name": "price",
+            "in": "formData",
+            "type": "number"
+          },
+          {
+            "name": "description",
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "picture",
+            "in": "formData",
+            "type": "file"
+          },
           {
             "name": "body",
             "in": "body",
             "schema": {
               "type": "object",
               "properties": {
-                "name": {
+                "status": {
                   "example": "any"
                 },
-                "provinceId": {
+                "message": {
                   "example": "any"
                 },
-                "guideId": {
-                  "example": "any"
-                },
-                "price": {
+                "error": {
                   "example": "any"
                 }
               }
@@ -543,8 +871,38 @@
           "201": {
             "description": "Created"
           },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
           "404": {
             "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/trips/q/{keyword}": {
+      "get": {
+        "tags": [
+          "Trips"
+        ],
+        "description": "ค้นหาทริป",
+        "parameters": [
+          {
+            "name": "keyword",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
           },
           "500": {
             "description": "Internal Server Error"
@@ -570,6 +928,9 @@
           "200": {
             "description": "OK"
           },
+          "400": {
+            "description": "Bad Request"
+          },
           "404": {
             "description": "Not Found"
           },
@@ -583,6 +944,9 @@
           "Trips"
         ],
         "description": "แก้ไขข้อมูลทริป",
+        "consumes": [
+          "multipart/form-data"
+        ],
         "parameters": [
           {
             "name": "id",
@@ -591,21 +955,56 @@
             "type": "string"
           },
           {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "in": "formData",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "provinceId",
+            "in": "formData",
+            "type": "integer",
+            "required": true
+          },
+          {
+            "name": "guideId",
+            "in": "formData",
+            "type": "integer",
+            "required": true
+          },
+          {
+            "name": "price",
+            "in": "formData",
+            "type": "number"
+          },
+          {
+            "name": "description",
+            "in": "formData",
+            "type": "string"
+          },
+          {
+            "name": "picture",
+            "in": "formData",
+            "type": "file"
+          },
+          {
             "name": "body",
             "in": "body",
             "schema": {
               "type": "object",
               "properties": {
-                "guideId": {
+                "status": {
                   "example": "any"
                 },
-                "provinceId": {
+                "message": {
                   "example": "any"
                 },
-                "price": {
-                  "example": "any"
-                },
-                "data": {
+                "error": {
                   "example": "any"
                 }
               }
@@ -615,6 +1014,12 @@
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
           },
           "404": {
             "description": "Not Found"
@@ -635,11 +1040,22 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
           }
         ],
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
           },
           "404": {
             "description": "Not Found"
@@ -672,6 +1088,9 @@
           "200": {
             "description": "OK"
           },
+          "400": {
+            "description": "Bad Request"
+          },
           "500": {
             "description": "Internal Server Error"
           }
@@ -683,6 +1102,11 @@
         ],
         "description": "สร้างรายการจองใหม่",
         "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          },
           {
             "name": "body",
             "in": "body",
@@ -708,6 +1132,9 @@
           },
           "400": {
             "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
           },
           "404": {
             "description": "Not Found"
@@ -736,6 +1163,9 @@
           "200": {
             "description": "OK"
           },
+          "400": {
+            "description": "Bad Request"
+          },
           "404": {
             "description": "Not Found"
           },
@@ -754,6 +1184,11 @@
             "name": "id",
             "in": "path",
             "required": true,
+            "type": "string"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
             "type": "string"
           },
           {
@@ -776,6 +1211,12 @@
           "200": {
             "description": "OK"
           },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
           "404": {
             "description": "Not Found"
           },
@@ -795,11 +1236,22 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
           }
         ],
         "responses": {
           "200": {
             "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
           },
           "404": {
             "description": "Not Found"

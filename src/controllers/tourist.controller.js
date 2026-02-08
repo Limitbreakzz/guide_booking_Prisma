@@ -1,4 +1,23 @@
 const prisma = require("../prisma.js");
+const multer = require("multer");
+const bcrypt = require("bcrypt");
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "images/");
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(
+      null,
+      file.fieldname +
+        "-" +
+        uniqueSuffix +
+        "." +
+        file.originalname.split(".").pop(),
+    );
+  },
+});
+const upload = multer({ storage: storage });
 
 exports.getTourists = async (req, res) => {
   try {
@@ -21,12 +40,16 @@ exports.getTourists = async (req, res) => {
 };
 
 exports.getTouristById = async (req, res) => {
+  const touristId = parseInt(req.params.id, 10);
+  if (isNaN(touristId))
+    return res.status(400).json({
+      status: "error",
+      message: "Invalid tourist id",
+    });
+
   try {
-    const tourist = await prisma.tourist.findFirst({
-      where: {
-        id: Number(req.params.id),
-        role: "tourist",
-      },
+    const tourist = await prisma.tourist.findUnique({
+      where: { id: touristId },
     });
 
     if (!tourist) {
@@ -51,95 +74,117 @@ exports.getTouristById = async (req, res) => {
 };
 
 exports.createTourist = async (req, res) => {
-  try {
-    const { name, email, password, tel, images } = req.body;
+  upload.single("picture")(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({
+        status: "error",
+        message: "Upload Picture Failed",
+        error: { detail: "Unable to create tourist" },
+      });
+    }
 
-    const existing = await prisma.tourist.findUnique({
-      where: { email },
-    });
+    const { name, email, password, tel } = req.body;
+    const picture = req.file ? req.file.filename : null;
+    const exists = await prisma.tourist.findUnique({ where: { email } });
 
-    if (existing) {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    if (exists) {
       return res.status(400).json({
         status: "error",
         message: "Email already exists",
       });
     }
 
-    const tourist = await prisma.tourist.create({
-      data: {
-        name,
-        email,
-        password,
-        tel,
-        images,
-        role: "tourist",
-      },
-    });
+    try {
+      const tourist = await prisma.tourist.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+          tel,
+          picture,
+          role: "TOURIST",
+        },
+      });
 
-    res.status(201).json({
-      status: "success",
-      message: "Tourist created successfully",
-      data: tourist,
-    });
-  } catch (error) {
-    console.error("Error creating tourist:", error);
-    res.status(500).json({
-      status: "error",
-      message: "Internal server error",
-    });
-  }
+      res.status(201).json({
+        status: "success",
+        message: "Tourist created successfully",
+        data: tourist,
+      });
+    } catch (error) {
+      console.error("Error creating tourist:", error);
+      res.status(500).json({
+        status: "error",
+        message: "Internal server error",
+      });
+    }
+  });
 };
 
 exports.updateTourist = async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-
-    if (isNaN(id)) {
+  upload.single("picture")(req, res, async (err) => {
+    if (err) {
       return res.status(400).json({
         status: "error",
-        message: "Invalid tourist id",
+        message: "Update Picture Failed",
       });
     }
 
-    if (req.body.role !== undefined) {
-      return res.status(400).json({
+    const touristId = parseInt(req.params.id, 10);
+
+    try {
+      const existingTourist = await prisma.tourist.findUnique({
+        where: { id: touristId },
+      });
+
+      if (!existingTourist) {
+        return res.status(404).json({
+          status: "error",
+          message: "Tourist not found",
+        });
+      }
+      
+      let pictureName = existingTourist.picture;
+
+      if (req.file) {
+        pictureName = req.file.filename;
+      }
+
+      const tourist = await prisma.tourist.update({
+        where: { id: touristId },
+        data: {
+          picture: pictureName,
+        },
+      });
+
+      res.json({
+        status: "success",
+        message: "Tourist updated successfully",
+        data: tourist,
+      });
+    } catch (error) {
+      console.error("Error updating tourist:", error);
+      res.status(500).json({
         status: "error",
-        message: "Role cannot be updated",
+        message: "Internal server error",
       });
     }
-
-    const updated = await prisma.tourist.update({
-      where: { id },
-      data: req.body,
-    });
-
-    res.json({
-      status: "success",
-      message: "Tourist updated successfully",
-      data: updated,
-    });
-
-  } catch (error) {
-    console.error("Error updating tourist:", error);
-
-    if (error.code === "P2025") {
-      return res.status(404).json({
-        status: "error",
-        message: "Tourist not found",
-      });
-    }
-
-    res.status(500).json({
-      status: "error",
-      message: "Internal server error",
-    });
-  }
+  });
 };
 
 exports.deleteTourist = async (req, res) => {
+  const touristId = parseInt(req.params.id, 10);
+  if (isNaN(touristId))
+    return res.status(400).json({
+      status: "error",
+      message: "Invalid touris id",
+    });
+
   try {
     await prisma.tourist.delete({
-      where: { id: Number(req.params.id) },
+      where: { id: touristId },
     });
 
     res.json({

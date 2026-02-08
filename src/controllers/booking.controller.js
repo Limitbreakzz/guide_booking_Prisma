@@ -2,21 +2,36 @@ const prisma = require("../prisma.js");
 
 exports.getBookings = async (req, res) => {
   try {
-    const { touristId, guideId } = req.query;
-    const where = {};
+    const user = req.user;
+    let where = {};
 
-    if (touristId) where.touristId = Number(touristId);
-    if (guideId) where.guideId = Number(guideId);
+    if (user.role === "GUIDE") {
+      where.guideId = user.id;
+    }
+
+    if (user.role === "TOURIST") {
+      where.touristId = user.id;
+    }
 
     const bookings = await prisma.booking.findMany({
       where,
       include: {
         trip: true,
         province: true,
-        tourist: { select: { id: true, name: true , tel: true } },
-        guide: { select: { id: true, name: true , experience: true, language: true, tel: true} },
+        tourist: {
+          select: { id: true, name: true, tel: true },
+        },
+        guide: {
+          select: {
+            id: true,
+            name: true,
+            experience: true,
+            language: true,
+            tel: true,
+          },
+        },
       },
-      orderBy: { createdAt: "desc" }
+      orderBy: { createdAt: "desc" },
     });
 
     res.json({
@@ -24,6 +39,7 @@ exports.getBookings = async (req, res) => {
       message: "Bookings retrieved successfully",
       data: bookings,
     });
+
   } catch (error) {
     console.error("Error fetching bookings:", error);
     res.status(500).json({
@@ -34,15 +50,22 @@ exports.getBookings = async (req, res) => {
 };
 
 exports.getBookingById = async (req, res) => {
+  const bookingId = parseInt(req.params.id, 10);
+  if (isNaN(bookingId))
+    return res.status(400).json({
+      status: "error",
+      message: "Invalid booking id",
+    });
+
   try {
     const booking = await prisma.booking.findUnique({
-      where: { id: Number(req.params.id) },
+      where: { id: bookingId },
       include: {
         trip: true,
         province: true,
         tourist: { select: { id: true, name: true } },
         guide: { select: { id: true, name: true } },
-      }
+      },
     });
 
     if (!booking) {
@@ -68,10 +91,36 @@ exports.getBookingById = async (req, res) => {
 
 exports.createBooking = async (req, res) => {
   try {
-    const { tripId, datetime, touristId } = req.body;
+    const { tripId, datetime } = req.body;
+
+    const tId = Number(tripId);
+    const bookingDate = new Date(datetime);
+
+    const tUserId = Number(req.user.id);
+
+    if (isNaN(tId)) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid tripId",
+      });
+    }
+
+    if (isNaN(tUserId)) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid touristId",
+      });
+    }
+
+    if (isNaN(bookingDate.getTime())) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid datetime",
+      });
+    }
 
     const trip = await prisma.trip.findUnique({
-      where: { id: Number(tripId) }
+      where: { id: tId },
     });
 
     if (!trip) {
@@ -81,24 +130,18 @@ exports.createBooking = async (req, res) => {
       });
     }
 
-    if (!touristId) {
-        return res.status(400).json({
-          message: "touristId is required" 
-        });
-    }
-
     const booking = await prisma.booking.create({
       data: {
         tripId: trip.id,
-        touristId: Number(touristId),
+        touristId: tUserId,
         guideId: trip.guideId,
         provinceId: trip.provinceId,
-        datetime: new Date(datetime),
+        datetime: bookingDate,
         status: "pending",
       },
-      include: { 
-        tourist: true, 
-        guide : true,
+      include: {
+        tourist: true,
+        guide: true,
       },
     });
 
@@ -112,40 +155,83 @@ exports.createBooking = async (req, res) => {
     res.status(500).json({
       status: "error",
       message: "Internal server error",
-      error: error.message
     });
   }
 };
 
-exports.updateBooking = async (req, res) => {
-  try {
-    const { datetime, status } = req.body;
 
-    const booking = await prisma.booking.findUnique({
-      where: { id: Number(req.params.id) }
+exports.updateBooking = async (req, res) => {
+  const bookingId = parseInt(req.params.id, 10);
+  if (isNaN(bookingId)) {
+    return res.status(400).json({
+      status: "error",
+      message: "Invalid booking id",
+    });
+  }
+
+  const { datetime, status } = req.body;
+  const userId = req.user.id;
+  const role = req.user.role;
+
+  try {
+    const existingBooking = await prisma.booking.findUnique({
+      where: { id: bookingId },
     });
 
-    if (!booking) {
+    if (!existingBooking) {
       return res.status(404).json({
         status: "error",
         message: "Booking not found",
       });
     }
 
-    const updated = await prisma.booking.update({
-      where: { id: booking.id },
+    if (status !== undefined) {
+      if (role !== "GUIDE" || existingBooking.guideId !== userId) {
+        return res.status(403).json({
+          status: "error",
+          message: "You are not allowed to update this booking",
+        });
+      }
+
+      const allowedStatus = ["pending", "confirmed", "rejected", "cancelled"];
+      if (!allowedStatus.includes(status)) {
+        return res.status(400).json({
+          status: "error",
+          message: "Invalid status value",
+        });
+      }
+    }
+
+    let parsedDate;
+    if (datetime !== undefined) {
+      parsedDate = new Date(datetime);
+      if (isNaN(parsedDate.getTime())) {
+        return res.status(400).json({
+          status: "error",
+          message: "Invalid datetime format",
+        });
+      }
+    }
+
+    const updatedBooking = await prisma.booking.update({
+      where: { id: bookingId },
       data: {
-        datetime: datetime ? new Date(datetime) : undefined,
-        status: status || undefined,
+        ...(datetime !== undefined ? { datetime: parsedDate } : {}),
+        ...(status !== undefined ? { status } : {}),
       },
-      include: { tourist: true },
+      include: {
+        tourist: true,
+        guide: true,
+        trip: true,
+      },
     });
 
     res.json({
       status: "success",
       message: "Booking updated successfully",
-      data: updated,
+      data: updatedBooking,
     });
+
   } catch (error) {
     console.error("Error updating booking:", error);
     res.status(500).json({
@@ -155,10 +241,18 @@ exports.updateBooking = async (req, res) => {
   }
 };
 
+
 exports.deleteBooking = async (req, res) => {
+  const bookingId = parseInt(req.params.id, 10);
+  if (isNaN(bookingId))
+    return res.status(400).json({
+      status: "error",
+      message: "Invalid booking id",
+    });
+
   try {
     const booking = await prisma.booking.findUnique({
-      where: { id: Number(req.params.id) }
+      where: { id: bookingId },
     });
 
     if (!booking) {
@@ -169,7 +263,7 @@ exports.deleteBooking = async (req, res) => {
     }
 
     await prisma.booking.delete({
-      where: { id: booking.id }
+      where: { id: booking.id },
     });
 
     res.json({

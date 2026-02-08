@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const swaggerFile = require('../swagger-output.json');
 const app = express();
@@ -11,13 +12,17 @@ const touristRoute = require('./routes/tourist.route')
 const provinceRoute = require('./routes/province.route')
 const tripRoute = require('./routes/trip.route')
 const bookingRoute = require('./routes/booking.route')
+const authRoutes = require('./routes/auth.route')
 
+
+app.use('/images', express.static(path.join(__dirname, '../images')));
 app.use(bodyParser.json());
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerFile));
 
+app.use('/auth', authRoutes);
 app.use("/guides", guideRoute);
 app.use("/tourists", touristRoute);
 app.use("/provinces", provinceRoute);

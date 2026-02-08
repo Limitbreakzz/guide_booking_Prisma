@@ -1,15 +1,33 @@
 const prisma = require("../prisma.js");
+const multer = require("multer");
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "images/");
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(
+      null,
+      file.fieldname +
+        "-" +
+        uniqueSuffix +
+        "." +
+        file.originalname.split(".").pop(),
+    );
+  },
+});
+const upload = multer({ storage: storage });
 
 exports.getTrips = async (req, res) => {
   try {
     const { provinceId } = req.query;
 
-    const trips = await prisma.trip.findMany({where: provinceId ? { provinceId: Number(provinceId) } : undefined,
+    const trips = await prisma.trip.findMany({
+      where: provinceId ? { provinceId: Number(provinceId) } : undefined,
       include: {
         province: true,
-        guide: { select: { id: true, name: true } }
+        guide: { select: { id: true, name: true } },
       },
-      orderBy: { name: "asc" }
     });
 
     res.json({
@@ -26,13 +44,72 @@ exports.getTrips = async (req, res) => {
   }
 };
 
-exports.getTripById = async (req, res) => {
+exports.getTripsByQuery = async (req, res) => {
   try {
-    const trip = await prisma.trip.findUnique({ where: { id: Number(req.params.id) },
+    const { keyword } = req.params;
+
+    if (!keyword) {
+      return res.json({
+        status: "success",
+        data: [],
+      });
+    }
+
+    const trips = await prisma.trip.findMany({
+      where: {
+        OR: [
+          {
+            name: {
+              contains: keyword,
+            },
+          },
+          {
+            province: {
+              name: {
+                contains: keyword,
+              },
+            },
+          },
+        ],
+      },
       include: {
         province: true,
-        guide: { select: { id: true, name: true } }
-      }
+        guide: { select: { id: true, name: true } },
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
+
+    res.json({
+      status: "success",
+      message: "Search trips successfully",
+      data: trips,
+    });
+  } catch (error) {
+    console.error("Search trips error:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Internal server error",
+    });
+  }
+};
+
+exports.getTripById = async (req, res) => {
+  const tripId = parseInt(req.params.id, 10);
+  if (isNaN(tripId))
+    return res.status(400).json({
+      status: "error",
+      message: "Invalid trip id",
+    });
+
+  try {
+    const trip = await prisma.trip.findUnique({
+      where: { id: tripId },
+      include: {
+        province: true,
+        guide: { select: { id: true, name: true } },
+      },
     });
 
     if (!trip) {
@@ -57,97 +134,187 @@ exports.getTripById = async (req, res) => {
 };
 
 exports.createTrip = async (req, res) => {
-  try {
-    const { name, provinceId, guideId, price } = req.body;
-
-    const province = await prisma.province.findUnique({
-      where: { id: Number(provinceId) }
-    });
-
-    if (!province) {
-      return res.status(404).json({
+  upload.single("picture")(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({
         status: "error",
-        message: "Province not found",
+        message: "Upload Picture Failed",
+        error: { detail: "Unable to create trip" },
       });
     }
 
-    const guide = await prisma.guide.findFirst({
-      where: { id: Number(guideId), role: "guide" }
-    });
+    const { name, provinceId, guideId, price, description } = req.body;
+    const picture = req.file ? req.file.filename : null;
+    const pId = Number(provinceId);
+    const gId = Number(guideId);
 
-    if (!guide) {
-      return res.status(404).json({
+    if (isNaN(pId) || isNaN(gId)) {
+      return res.status(400).json({
         status: "error",
-        message: "Guide not found",
+        message: "Invalid provinceId or guideId",
       });
     }
 
-    const trip = await prisma.trip.create({
-      data: {
-        name,
-        provinceId: Number(provinceId),
-        guideId: Number(guideId),
-        price: price ? Number(price) : null,
-      },
-      include: { guide: true }
-    });
+    try {
+      const province = await prisma.province.findUnique({
+        where: { id: pId },
+      });
 
-    res.status(201).json({
-      status: "success",
-      message: "Trip created successfully",
-      data: trip,
-    });
-  } catch (error) {
-    console.error("Error creating trip:", error);
-    res.status(500).json({
-      status: "error",
-      message: "Internal server error",
-    });
-  }
+      if (!province) {
+        return res.status(404).json({
+          status: "error",
+          message: "Province not found",
+        });
+      }
+
+      const guide = await prisma.guide.findUnique({
+        where: { id: gId },
+      });
+
+      if (!guide || guide.role !== "GUIDE") {
+        return res.status(404).json({
+          status: "error",
+          message: "Guide not found",
+        });
+      }
+
+      const trip = await prisma.trip.create({
+        data: {
+          name,
+          provinceId: pId,
+          guideId: gId,
+          price: price ? Number(price) : null,
+          picture,
+          description: description || null,
+        },
+        include: {
+          guide: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      });
+
+      res.status(201).json({
+        status: "success",
+        message: "Trip created successfully",
+        data: trip,
+      });
+    } catch (error) {
+      console.error("Error creating trip:", error);
+      res.status(500).json({
+        status: "error",
+        message: "Internal server error",
+      });
+    }
+  });
 };
 
 exports.updateTrip = async (req, res) => {
-  try {
-    const { guideId, provinceId, price, ...data } = req.body;
-
-    const updated = await prisma.trip.update({
-      where: { id: Number(req.params.id) },
-      data: {
-        ...data,
-        ...(price !== undefined ? { price: Number(price) } : {}),
-        ...(guideId ? { guideId: Number(guideId) } : {}),
-        ...(provinceId ? { provinceId: Number(provinceId) } : {}),
-      },
-      include: { guide: true },
-    });
-
-    res.json({
-      status: "success",
-      message: "Trip updated successfully",
-      data: updated,
-    });
-  } catch (error) {
-    console.error("Error updating trip:", error);
-
-    if (error.code === "P2025") {
-      return res.status(404).json({
+  upload.single("picture")(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({
         status: "error",
-        message: "Trip not found",
+        message: "Update Picture Failed",
+        error: { detail: err.message },
       });
     }
 
-    res.status(500).json({
-      status: "error",
-      message: "Internal server error",
-      error: error.message
-    });
-  }
+    const tripId = Number(req.params.id);
+    if (!tripId) {
+      return res.status(400).json({
+        status: "error",
+        message: "Invalid trip id",
+      });
+    }
+
+    try {
+      const existingTrip = await prisma.trip.findUnique({
+        where: { id: tripId },
+      });
+
+      if (!existingTrip) {
+        return res.status(404).json({
+          status: "error",
+          message: "Trip not found",
+        });
+      }
+
+      const {
+        name,
+        isActive,
+        guideId,
+        provinceId,
+        price,
+        description,
+      } = req.body;
+
+      let pictureName = existingTrip.picture;
+      if (req.file) {
+        pictureName = req.file.filename;
+      }
+
+      let parsedPrice;
+      if (price !== undefined) {
+        parsedPrice = Number(price);
+        if (isNaN(parsedPrice)) {
+          return res.status(400).json({
+            status: "error",
+            message: "Invalid price",
+          });
+        }
+      }
+
+      const updateData = {
+        ...(name !== undefined && { name }),
+        ...(description !== undefined && { description }),
+        ...(isActive !== undefined && { isActive: isActive === "true" || isActive === true }),
+        ...(price !== undefined && { price: parsedPrice }),
+        ...(guideId !== undefined && { guideId: Number(guideId) }),
+        ...(provinceId !== undefined && { provinceId: Number(provinceId) }),
+        picture: pictureName,
+      };
+
+      const trip = await prisma.trip.update({
+        where: { id: tripId },
+        data: updateData,
+        include: {
+          guide: {
+            select: { id: true, name: true },
+          },
+        },
+      });
+
+      res.json({
+        status: "success",
+        message: "Trip updated successfully",
+        data: trip,
+      });
+    } catch (error) {
+      console.error("Error updating trip:", error);
+      res.status(500).json({
+        status: "error",
+        message: "Internal server error",
+      });
+    }
+  });
 };
 
+
+
 exports.deleteTrip = async (req, res) => {
+  const tripId = parseInt(req.params.id, 10);
+  if (isNaN(tripId))
+    return res.status(400).json({
+      status: "error",
+      message: "Invalid trip id",
+    });
+
   try {
     await prisma.trip.delete({
-      where: { id: Number(req.params.id) },
+      where: { id: tripId },
     });
 
     res.json({

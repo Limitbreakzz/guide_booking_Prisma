@@ -3,7 +3,7 @@ const prisma = require("../prisma.js");
 exports.getProvinces = async (req, res) => {
   try {
     const provinces = await prisma.province.findMany({
-      orderBy: { name: "asc" }
+      orderBy: { name: "asc" },
     });
 
     res.json({
@@ -21,9 +21,16 @@ exports.getProvinces = async (req, res) => {
 };
 
 exports.getProvinceById = async (req, res) => {
+  const provinceId = parseInt(req.params.id, 10);
+  if (isNaN(provinceId))
+    return res.status(400).json({
+      status: "error",
+      message: "Invalid province id",
+    });
+
   try {
     const province = await prisma.province.findUnique({
-      where: { id: Number(req.params.id) }
+      where: { id: provinceId },
     });
 
     if (!province) {
@@ -52,7 +59,7 @@ exports.createProvince = async (req, res) => {
     const { name } = req.body;
 
     const existing = await prisma.province.findUnique({
-      where: { name }
+      where: { name },
     });
 
     if (existing) {
@@ -63,7 +70,7 @@ exports.createProvince = async (req, res) => {
     }
 
     const province = await prisma.province.create({
-      data: { name }
+      data: { name },
     });
 
     res.status(201).json({
@@ -81,32 +88,37 @@ exports.createProvince = async (req, res) => {
 };
 
 exports.updateProvince = async (req, res) => {
+  const provinceId = parseInt(req.params.id, 10);
+  if (isNaN(provinceId)) {
+    return res.status(400).json({
+      status: "error",
+      message: "Invalid province id",
+    });
+  }
+
   try {
     const { name } = req.body;
 
-    const province = await prisma.province.findUnique({
-      where: { id: Number(req.params.id) }
+    const province = await prisma.province.update({
+      where: { id: provinceId },
+      data: { name },
     });
 
-    if (!province) {
+    res.json({
+      status: "success",
+      message: "Province updated successfully",
+      data: province,
+    });
+  } catch (error) {
+    console.error("Error updating province:", error);
+
+    if (error.code === "P2025") {
       return res.status(404).json({
         status: "error",
         message: "Province not found",
       });
     }
 
-    const updated = await prisma.province.update({
-      where: { id: province.id },
-      data: { name }
-    });
-
-    res.json({
-      status: "success",
-      message: "Province updated successfully",
-      data: updated,
-    });
-  } catch (error) {
-    console.error("Error updating province:", error);
     res.status(500).json({
       status: "error",
       message: "Internal server error",
@@ -115,9 +127,16 @@ exports.updateProvince = async (req, res) => {
 };
 
 exports.deleteProvince = async (req, res) => {
+  const provinceId = parseInt(req.params.id, 10);
+  if (isNaN(provinceId))
+    return res.status(400).json({
+      status: 'error',
+      message: 'Invalid province id'
+    });
+
   try {
     await prisma.province.delete({
-      where: { id: Number(req.params.id) }
+      where: { id: provinceId },
     });
 
     res.json({

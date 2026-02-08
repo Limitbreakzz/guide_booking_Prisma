@@ -1,4 +1,23 @@
 const prisma = require("../prisma.js");
+const multer = require("multer");
+const bcrypt = require("bcrypt");
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "images/");
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(
+      null,
+      file.fieldname +
+        "-" +
+        uniqueSuffix +
+        "." +
+        file.originalname.split(".").pop(),
+    );
+  },
+});
+const upload = multer({ storage: storage });
 
 exports.getGuides = async (req, res) => {
   try {
@@ -20,17 +39,75 @@ exports.getGuides = async (req, res) => {
   }
 };
 
+exports.getGuideByQuery = async (req, res) => {
+  try {
+    const { keyword } = req.params;
+
+    if (!keyword) {
+      return res.json({
+        status: "success",
+        data: [],
+      });
+    }
+
+    const guides = await prisma.guide.findMany({
+      where: {
+        OR: [
+          {
+            name: {
+              contains: keyword,
+            },
+          },
+          {
+            language: {
+              contains: keyword,
+            },
+          },
+        ],
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
+
+    res.json({
+      status: "success",
+      message: "Search guides successfully",
+      data: guides,
+    });
+  } catch (error) {
+    console.error("Search guide error:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Internal server error",
+    });
+  }
+};
+
 exports.getGuideById = async (req, res) => {
-  const id = Number(req.params.id);
+  const guideId = parseInt(req.params.id, 10);
+  if (isNaN(guideId))
+    return res.status(400).json({
+      status: "error",
+      message: "Invalid guide id",
+    });
 
   try {
-    const guide = await prisma.guide.findFirst({
-      where: { id, role: "GUIDE" },
+    const guide = await prisma.guide.findUnique({
+      where: { id: guideId },
+      include: {
+        trips: {
+          where: { isActive: true },
+          include: {
+            province: true,
+          },
+        },
+      },
     });
 
     if (!guide) {
-      return res.status(404).json({ 
-        message: "Guide not found" 
+      return res.status(404).json({
+        message: "Guide not found",
       });
     }
 
@@ -49,50 +126,70 @@ exports.getGuideById = async (req, res) => {
 };
 
 exports.createGuide = async (req, res) => {
-  try {
-    const { name, email, password, tel, experience, language, images } = req.body;
-
-    const exists = await prisma.guide.findUnique({ where: { email } });
-
-    if (exists) {
-      return res.status(400).json({ 
-        message: "Email already exists" 
+  upload.single("picture")(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({
+        status: "error",
+        message: "Upload Picture Failed",
+        error: { detail: "Unable to create guide" },
       });
     }
 
-    const guide = await prisma.guide.create({
-      data: {
-        name,
-        email,
-        password,
-        tel,
-        role: "GUIDE",
-        status: true,
-        experience,
-        language,
-        images,
-      },
-    });
+    const { name, email, password, tel, experience, language } = req.body;
+    const picture = req.file ? req.file.filename : null;
+    const exists = await prisma.guide.findUnique({ where: { email } });
 
-    res.status(201).json({
-      status: "success",
-      message: "Guide created successfully",
-      data: guide,
-    });
-  } catch (error) {
-    console.error("Error creating guide:", error);
-    res.status(500).json({
-      status: "error",
-      message: "Internal server error",
-    });
-  }
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    if (exists) {
+      return res.status(400).json({
+        status: "error",
+        message: "Email already exists",
+      });
+    }
+
+    try {
+      const guide = await prisma.guide.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+          tel,
+          role: "GUIDE",
+          status: true,
+          experience,
+          language,
+          picture,
+        },
+      });
+
+      res.status(201).json({
+        status: "success",
+        message: "Guide created successfully",
+        data: guide,
+      });
+    } catch (error) {
+      console.error("Error creating guide:", error);
+      res.status(500).json({
+        status: "error",
+        message: "Internal server error",
+      });
+    }
+  });
 };
 
 exports.updateGuide = async (req, res) => {
-  try {
-    const id = Number(req.params.id);
+  upload.single("picture")(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({
+        status: "error",
+        message: "Update Picture Failed",
+        error: { detail: "Unable to update guide" },
+      });
+    }
 
-    if (isNaN(id)) {
+    const guideId = parseInt(req.params.id, 10);
+    if (isNaN(guideId)) {
       return res.status(400).json({
         status: "error",
         message: "Invalid guide id",
@@ -105,49 +202,76 @@ exports.updateGuide = async (req, res) => {
         message: "Role cannot be updated",
       });
     }
-    const { name, email, password, tel, experience, language, images, status } = req.body;
 
-    const updated = await prisma.guide.update({
-      where: { id },
-      data: {
-        name,
-        email,
-        password,
-        tel,
-        experience,
-        language,
-        images,
-        status: typeof status === "boolean" ? status : undefined,
-      },
-    });
+    try {
+      const existingGuide = await prisma.guide.findUnique({
+        where: { id: guideId },
+      });
 
-    res.json({
-      status: "success",
-      message: "Guide updated successfully",
-      data: updated,
-    });
+      if (!existingGuide) {
+        return res.status(404).json({
+          status: "error",
+          message: "Guide not found",
+        });
+      }
 
-  } catch (error) {
-    console.error("Error updating guide:", error);
+      const { name, email, password, tel, experience, language, status } =
+        req.body;
 
-    if (error.code === "P2025") {
-      return res.status(404).json({
+      let pictureName = existingGuide.picture;
+
+      if (req.file) {
+        pictureName = req.file.filename;
+      }
+
+      const guide = await prisma.guide.update({
+        where: { id: guideId },
+        data: {
+          name,
+          email,
+          password,
+          tel,
+          experience,
+          language,
+          picture: pictureName,
+          status: status !== undefined ? status === "true" : undefined,
+        },
+      });
+
+      res.json({
+        status: "success",
+        message: "Guide updated successfully",
+        data: guide,
+      });
+    } catch (error) {
+      console.error("Error updating guide:", error);
+
+      if (error.code === "P2025") {
+        return res.status(404).json({
+          status: "error",
+          message: "Guide not found",
+        });
+      }
+
+      res.status(500).json({
         status: "error",
-        message: "Guide not found",
+        message: "Internal server error",
       });
     }
-
-    res.status(500).json({
-      status: "error",
-      message: "Internal server error",
-    });
-  }
+  });
 };
 
 exports.deleteGuide = async (req, res) => {
+  const guideId = parseInt(req.params.id, 10);
+  if (isNaN(guideId))
+    return res.status(400).json({
+      status: "error",
+      message: "Invalid guide id",
+    });
+
   try {
     await prisma.guide.delete({
-      where: { id: Number(req.params.id) },
+      where: { id: guideId },
     });
 
     res.json({
