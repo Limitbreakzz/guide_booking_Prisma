@@ -133,6 +133,7 @@ exports.updateTourist = async (req, res) => {
     }
 
     const touristId = parseInt(req.params.id, 10);
+    const { name, email, tel } = req.body;
 
     try {
       const existingTourist = await prisma.tourist.findUnique({
@@ -155,6 +156,9 @@ exports.updateTourist = async (req, res) => {
       const tourist = await prisma.tourist.update({
         where: { id: touristId },
         data: {
+          name,
+          email,
+          tel,
           picture: pictureName,
         },
       });
