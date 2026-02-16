@@ -9,6 +9,12 @@ app.get('/',
     controller.getTrips
 );
 
+app.get('/top',
+    // #swagger.tags = ['Trips']
+    // #swagger.description = 'แสดงทริปยอดนิยม'
+    controller.getTopTrips
+);
+
 app.get("/q/:keyword",
     // #swagger.tags = ['Trips']
     // #swagger.description = 'ค้นหาทริป'

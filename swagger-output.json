@@ -39,9 +39,6 @@
                 },
                 "password": {
                   "example": "any"
-                },
-                "role": {
-                  "example": "any"
                 }
               }
             }
@@ -95,6 +92,22 @@
           },
           "400": {
             "description": "Bad Request"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/admin/dashboard": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "description": "แดชบอร์ด",
+        "responses": {
+          "200": {
+            "description": "OK"
           },
           "500": {
             "description": "Internal Server Error"
@@ -539,16 +552,13 @@
             "schema": {
               "type": "object",
               "properties": {
-                "role": {
+                "name": {
                   "example": "any"
                 },
-                "status": {
+                "email": {
                   "example": "any"
                 },
-                "message": {
-                  "example": "any"
-                },
-                "error": {
+                "tel": {
                   "example": "any"
                 }
               }
@@ -886,6 +896,22 @@
         }
       }
     },
+    "/trips/top": {
+      "get": {
+        "tags": [
+          "Trips"
+        ],
+        "description": "แสดงทริปยอดนิยม",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/trips/q/{keyword}": {
       "get": {
         "tags": [
@@ -1074,13 +1100,8 @@
         "description": "ดึงรายการจองทั้งหมด",
         "parameters": [
           {
-            "name": "touristId",
-            "in": "query",
-            "type": "string"
-          },
-          {
-            "name": "guideId",
-            "in": "query",
+            "name": "authorization",
+            "in": "header",
             "type": "string"
           }
         ],
@@ -1088,8 +1109,8 @@
           "200": {
             "description": "OK"
           },
-          "400": {
-            "description": "Bad Request"
+          "401": {
+            "description": "Unauthorized"
           },
           "500": {
             "description": "Internal Server Error"
@@ -1117,9 +1138,6 @@
                   "example": "any"
                 },
                 "datetime": {
-                  "example": "any"
-                },
-                "touristId": {
                   "example": "any"
                 }
               }
@@ -1157,6 +1175,11 @@
             "in": "path",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
           }
         ],
         "responses": {
@@ -1165,6 +1188,9 @@
           },
           "400": {
             "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
           },
           "404": {
             "description": "Not Found"
@@ -1216,6 +1242,9 @@
           },
           "401": {
             "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
           },
           "404": {
             "description": "Not Found"

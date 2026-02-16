@@ -337,3 +337,37 @@ exports.deleteTrip = async (req, res) => {
     });
   }
 };
+
+exports.getTopTrips = async (req, res) => {
+  try {
+    const trips = await prisma.trip.findMany({
+      take: 6,
+      orderBy: {
+        bookings: {
+          _count: "desc",
+        },
+      },
+      include: {
+        province: true,
+        guide: true,
+        _count: {
+          select: { bookings: true },
+        },
+      },
+    });
+
+    res.json({
+      status: "success",
+      message: "Top trips fetched successfully",
+      data: trips,
+    });
+
+  } catch (error) {
+    console.error("Error fetching top trips:", error);
+
+    res.status(500).json({
+      status: "error",
+      message: "Internal server error",
+    });
+  }
+};
