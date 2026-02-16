@@ -2,6 +2,43 @@ const prisma = require("../prisma.js");
 
 exports.getBookings = async (req, res) => {
   try {
+    const bookings = await prisma.booking.findMany({
+      include: {
+        trip: true,
+        province: true,
+        tourist: {
+          select: { id: true, name: true, tel: true },
+        },
+        guide: {
+          select: {
+            id: true,
+            name: true,
+            experience: true,
+            language: true,
+            tel: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    res.json({
+      status: "success",
+      message: "Bookings retrieved successfully",
+      data: bookings,
+    });
+
+  } catch (error) {
+    console.error("Error fetching bookings:", error);
+    res.status(500).json({
+      status: "error",
+      message: "Internal server error",
+    });
+  }
+};
+
+exports.getMyBookings = async (req, res) => {
+  try {
     const user = req.user;
     let where = {};
 
@@ -158,7 +195,6 @@ exports.createBooking = async (req, res) => {
     });
   }
 };
-
 
 exports.updateBooking = async (req, res) => {
   const bookingId = parseInt(req.params.id, 10);

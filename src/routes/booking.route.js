@@ -10,6 +10,13 @@ app.get('/',
     controller.getBookings
 );
 
+app.get("/my-bookings",
+    // #swagger.tags = ['Bookings']
+    // #swagger.description = 'ดึงรายการจองเฉพาะของ role นั้น'
+    authMiddleware.authenticate,
+    controller.getMyBookings
+);
+
 app.get('/:id',
     // #swagger.tags = ['Bookings']
     // #swagger.description = 'ดึงข้อมูลการจองตาม ID'
